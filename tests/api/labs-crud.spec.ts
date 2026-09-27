@@ -135,4 +135,32 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
       expect(response.status()).toBe(401); //Expected status code 401 Unauthorized
     });
   });
+
+  // ==========================================
+  // 2. GET METHOD (/api/labs & /api/labs/{id})
+  // ==========================================
+  test.describe("GET /api/labs", () => {
+    //Positive: Memanggil endpoint detail dengan ID yang valid (createdLabId) dan token. Memvalidasi status code 200 dan mencocokkan ID respons dengan ID yang diminta.
+    test("[Positive] Berhasil mengambil detail lab berdasarkan ID yang valid", async () => {
+      const response = await apiContext.get(`/api/labs/${createdLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      expect(response.status()).toBe(200); //Expected status code 200 OK
+      const body = await response.json();
+      const labId = body.id || body.data?.id || body._id;
+      expect(String(labId)).toBe(String(createdLabId)); //Expected ID pada respons sama dengan ID yang diminta
+    });
+
+    //Memanggil endpoint dengan ID acak/tidak valid (99999999-invalid-id). Memvalidasi bahwa sistem mengembalikan error 404 Not Found (atau 400 Bad Request).
+    test("[Negative] Gagal mengambil lab dengan ID yang tidak ada / invalid (404 Not Found)", async () => {
+      const invalidLabId = "99999999-invalid-id";
+
+      const response = await apiContext.get(`/api/labs/${invalidLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
+    });
+  });
 });
