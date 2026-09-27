@@ -163,4 +163,43 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
       expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
     });
   });
+
+  // ==========================================
+  // 3. PUT METHOD (/api/labs/{id}) >> Update
+  // ==========================================
+
+  //Positive: Mengirim payload perubahan data pada createdLabId. Memvalidasi status code 200 dan memastikan data title pada respons sudah berubah sesuai data baru.
+  test.describe("PUT /api/labs/{id}", () => {
+    test("[Positive] Berhasil mengupdate data lab", async () => {
+      const updatePayload = {
+        title: `Updated Lab Title ${timestamp}`,
+        description: "Updated lab description",
+      };
+
+      const response = await apiContext.put(`/api/labs/${createdLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+        data: updatePayload,
+      });
+
+      expect(response.status()).toBe(200); //Expected status code 200 OK
+      const body = await response.json();
+      const updatedTitle = body.title || body.data?.title;
+      expect(updatedTitle).toBe(updatePayload.title); //Expected title pada respons sama dengan title yang dikirim untuk update
+    });
+
+    //Negative: Mencoba memperbarui lab dengan ID yang tidak terdaftar di database. Memvalidasi respons penolakan dari server (404 / 400).
+    test("[Negative] Gagal update jika ID tidak ditemukan (404 Not Found)", async () => {
+      const nonExistentId = "99999999-invalid-id";
+
+      const response = await apiContext.put(`/api/labs/${nonExistentId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+        data: {
+          title: "Update non existent",
+          description: "Should return 404",
+        },
+      });
+
+      expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
+    });
+  });
 });
