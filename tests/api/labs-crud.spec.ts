@@ -202,4 +202,40 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
       expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
     });
   });
+
+  // ==========================================
+  // 4. DELETE METHOD (/api/labs/{id})
+  // ==========================================
+
+  //Negative (Unauthorized): Mencoba menghapus resource tanpa menyertakan header token. Memvalidasi server memblokir aksi dengan respons 401 Unauthorized.
+  test.describe("DELETE /api/labs/{id}", () => {
+    test("[Negative] Gagal delete lab tanpa Token / Unauthorized (401)", async () => {
+      const response = await apiContext.delete(`/api/labs/${createdLabId}`);
+      expect(response.status()).toBe(401); //Expected status code 401 Unauthorized
+    });
+
+    //Positive: Menghapus resource menggunakan ID yang valid dan token yang sah. Memvalidasi status penghapusan (200 atau 204 No Content). Diikuti verifikasi lanjutan: melakukan GET kembali ke ID tersebut untuk memastikan data benar-benar sudah berstatus 404 Not Found.
+    test("[Positive] Berhasil menghapus lab berdasarkan ID", async () => {
+      const response = await apiContext.delete(`/api/labs/${createdLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      expect([200, 204]).toContain(response.status()); //Expected status code 200 OK atau 204 No Content
+
+      // Verifikasi item benar-benar sudah hilang
+      const verifyResponse = await apiContext.get(`/api/labs/${createdLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      expect([404, 400]).toContain(verifyResponse.status()); //Expected status code 404 Not Found atau 400 Bad Request
+    });
+
+    //Negative (Not Found): Mencoba menghapus kembali ID yang barusan sudah sukses dihapus. Memvalidasi bahwa server menolak karena resource sudah tidak ada (404 / 400).
+    test("[Negative] Gagal delete lab yang sudah dihapus / tidak ada (404 Not Found)", async () => {
+      const response = await apiContext.delete(`/api/labs/${createdLabId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
+    });
+  });
 });
