@@ -5,6 +5,7 @@ import {
   APIRequestContext,
 } from "@playwright/test";
 declare const require: any;
+const { parse } = require("csv-parse/sync");
 const fs = require("fs");
 
 // Eksekusi Berurutan
@@ -237,5 +238,26 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
 
       expect([404, 400]).toContain(response.status()); //Expected status code 404 Not Found atau 400 Bad Request
     });
+  });
+
+  // ==========================================
+  // 5. DATA-DRIVEN TESTING (CSV)
+  // ==========================================
+  test.describe("Data-Driven dari CSV", () => {
+    const csvPath = "data/labs.csv";
+    const csvData = parse(fs.readFileSync(csvPath, "utf-8"), {
+      columns: true,
+      skip_empty_lines: true,
+    });
+
+    for (const row of csvData) {
+      test(`[CSV] title="${row.title || "(kosong)"}" → expect ${row.expected_status}`, async () => {
+        const response = await apiContext.post("/api/labs", {
+          headers: { Authorization: `Bearer ${authToken}` },
+          data: { title: row.title, description: row.description },
+        });
+        expect(response.status()).toBe(Number(row.expected_status));
+      });
+    }
   });
 });

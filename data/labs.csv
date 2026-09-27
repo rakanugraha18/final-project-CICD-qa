@@ -1,0 +1,4 @@
+title,description,expected_status
+"CSV Valid Lab","Data dari CSV - skenario valid","201"
+"","Title kosong - skenario invalid","400"
+"Edge","x","201"
