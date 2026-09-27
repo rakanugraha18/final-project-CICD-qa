@@ -260,21 +260,4 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
       });
     }
   });
-
-  // ==========================================
-  // BUKTI GATEKEEPER / SKENARIO GAGAL SENGAJA
-  // ==========================================
-  test("[Gatekeeper] Sengaja gagal untuk membuktikan pipeline CI aktif", async () => {
-    const response = await apiContext.post("/api/labs", {
-      headers: { Authorization: `Bearer ${authToken}` },
-      data: {
-        title: "", // Title kosong
-        description: "Test gatekeeper",
-      },
-    });
-
-    // Server aslinya mengembalikan status 400 atau 422 untuk title kosong.
-    // Kita sengaja pasang expect(200) agar tes ini PASTI GAGAL (Merah) untuk bukti Gatekeeper.
-    expect(response.status()).toBe(200);
-  });
 });
