@@ -80,4 +80,59 @@ test.describe.serial("API Automation Testing - /api/labs", () => {
   test("[Auth] Token berhasil didapatkan dari login", async () => {
     expect(authToken).toBeTruthy();
   });
+
+  // ==========================================
+  // 1. POST METHOD (/api/labs)
+  // ==========================================
+  test.describe("POST /api/labs", () => {
+    //Positive: Mengirim data lab baru dengan header Authorization: Bearer <token>. Memvalidasi status code 201/200, memastikan ID terbuat, lalu menyimpannya ke createdLabId.
+    test("[Positive] Berhasil membuat lab baru", async () => {
+      const payload = {
+        title: `Automation Test Lab ${timestamp}`,
+        description: "Lab created by automated test suite",
+      };
+
+      const response = await apiContext.post("/api/labs", {
+        headers: { Authorization: `Bearer ${authToken}` },
+        data: payload,
+      });
+
+      expect([200, 201]).toContain(response.status()); //Expected status code 200 OK atau 201 Created
+      const body = await response.json();
+
+      createdLabId = body.id || body.data?.id || body._id;
+      expect(createdLabId).toBeDefined(); // Expected ID lab baru tidak kosong/null/undefined
+
+      const createdTitle = body.title || body.data?.title;
+      expect(createdTitle).toBe(payload.title); // Expected title pada respons sama dengan title yang dikirim
+    });
+
+    //Negative (Validation Error): Menguji skenario gagal membuat lab jika title kosong, dan memverifikasi bahwa server mengembalikan status code 400/422.
+    test("[Negative] Gagal membuat lab jika title kosong (Validation Error 400)", async () => {
+      const invalidPayload = {
+        title: "", // Title kosong
+        description: "Missing title test",
+      };
+
+      const response = await apiContext.post("/api/labs", {
+        headers: { Authorization: `Bearer ${authToken}` },
+        data: invalidPayload,
+      });
+
+      // Validasi status code error
+      expect([400, 422]).toContain(response.status()); //Expected status code 400 Bad Request atau 422 Unprocessable Entity
+    });
+
+    //Negative (Unauthorized): Menguji skenario gagal membuat lab tanpa menyertakan Authorization Token, dan memverifikasi bahwa server mengembalikan status code 401 Unauthorized.
+    test("[Negative] Gagal membuat lab tanpa Authorization Token (401 Unauthorized)", async () => {
+      const response = await apiContext.post("/api/labs", {
+        data: {
+          title: "Unauthorized Test Lab",
+          description: "Should fail with 401",
+        },
+      });
+
+      expect(response.status()).toBe(401); //Expected status code 401 Unauthorized
+    });
+  });
 });
